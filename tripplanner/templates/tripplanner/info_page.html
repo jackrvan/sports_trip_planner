@@ -1,7 +1,10 @@
+{% extends 'header.html' %}
 {% load static %}
 
-<h1>Found these games that {{ team }} is playing at away arenas between {{ start_date }} and {{ end_date }}:
-{% for game in games %}
-    <br>
-    {{ game }}
-{% endfor %} 
+{% block content %}
+    <h1>Found these games that the {{ team }} are playing at between {{ start_date }} and {{ end_date }}:</h1>
+    {% for game in games %}
+        <br>
+        {{ game }}
+    {% endfor %}
+{% endblock content %}

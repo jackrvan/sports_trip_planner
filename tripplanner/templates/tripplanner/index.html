@@ -1,8 +1,33 @@
+{% extends 'header.html' %}
 {% load crispy_forms_tags %}
 
-<form action="" method="post">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <input type="submit" value="Submit">
+{% block content %}
+<form method="post" id="form" data-cities-url="{% url 'tripplanner:ajax_load_provinces' %}" novalidate>
+<div class="row">
+    <div class="col-lg-12" id="form-div">
+        {% crispy form %}
+    </div>
+</div>
 </form>
 
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+$("#id_nhl_form-starting_country").change(function () {
+    var url = $("#form").attr("data-cities-url");  // get the url of the load provinces page
+    var country = $(this).val();  // get the selected country
+
+    $.ajax({
+        url: url,
+        data: {
+            'country': country
+        },
+        success: function (data) {   // `data` is the return of the `load_cities` view function
+            // replace the contents of the city input with the data that came from the server
+            $("#id_nhl_form-starting_province").html(data);
+        }
+    });
+
+});
+</script>
+
+{% endblock content %}
