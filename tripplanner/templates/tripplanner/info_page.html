@@ -1,10 +1,96 @@
 {% extends 'header.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
+{% load custom_template_tags %}
 
 {% block content %}
-    <h1>Found these games that the {{ team }} are playing at between {{ start_date }} and {{ end_date }}:</h1>
+    <form method="get" id="form" action="" data-cities-url="{% url 'tripplanner:ajax_load_provinces' %}" novalidate>
+    <div class="row">
+    <div class="col-lg-12" id="form-div">
+        <div id="div_id_nhl_form-starting_country" class="control-group">
+        <label for="id_nhl_form-starting_country" class="control-label requiredField">Starting country
+            <span class="asteriskField">*</span>
+        </label>
+        <div class="controls"> 
+            <select name="nhl_form-starting_country" class="form-control select" id="id_nhl_form-starting_country">
+                <option value="Canada" selected="">Canada</option>
+                <option value="USA">USA</option>
+            </select> 
+        </div> 
+    </div> 
+    <div id="div_id_nhl_form-starting_province" class="control-group">
+        <label for="id_nhl_form-starting_province" class="control-label requiredField">Starting province
+            <span class="asteriskField">*</span>
+        </label>
+        <div class="controls">
+            <select name="nhl_form-starting_province" class="form-control select" id="id_nhl_form-starting_province">
+                <option value="Alberta">Alberta</option>
+                <option value="British Columba">British Columba</option>
+                <option value="Manitoba">Manitoba</option>
+                <option value="New Brunswick">New Brunswick</option>
+                <option value="Newfoundland and Labrador">Newfoundland and Labrador</option>
+                <option value="Northwest Territories">Northwest Territories</option>
+                <option value="Nova Scotia">Nova Scotia</option>
+                <option value="Nunavut">Nunavut</option>
+                <option value="Ontario">Ontario</option>
+                <option value="Prince Edward Island">Prince Edward Island</option>
+                <option value="Quebec">Quebec</option>
+                <option value="Saskatchewan">Saskatchewan</option>
+                <option value="Yukon">Yukon</option>
+            </select> 
+        </div>
+    </div> 
+    <div id="div_id_nhl_form-starting_city" class="control-group">
+        <label for="id_nhl_form-starting_city" class="control-label requiredField">Starting city
+            <span class="asteriskField">*</span>
+        </label>
+        <div class="controls">
+            <input type="text" name="nhl_form-starting_city" class="form-control textinput textInput" required="" id="id_nhl_form-starting_city">
+        </div> 
+    </div>
+    <br>
+    
+    <table>
+    <tr>
+        <th><button type="submit" id="away_team_sort" name="away_team_sort" class="btn btn-primary">Away Team</button></th>
+        <th><button type="submit" id="home_team_sort" name="home_team_sort" class="btn btn-primary">Home Team</button></th>
+        <th><button id="date_sort" id="date_sort" name="date_sort" class="btn btn-primary">Date</button></th>
+        <th><button type="submit" id="distance_sort" name="distance_sort" class="btn btn-primary">Distance</button></th>
+    </tr>
+    <tr>
+        <th><input type="text" id="away_team_filter" name="away_team_filter" value="{{ away_team_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+        <th><input type="text" id="home_team_filter" name="home_team_filter" value="{{ home_team_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+        <th><input type="text" id="date_filter" name="date_filter" value="{{ date_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+        <th><input type="text" id="distance_filter" name="distance_filter" value="{{ distance_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+    </form>
     {% for game in games %}
-        <br>
-        {{ game }}
+        <tr>
+            <th>{{ game.away_team_name }}</th>
+            <th>{{ game.home_team_name }}</th>
+            <th>{{ game.date }}</th>
+            <th>{{ distances|get_dict_item:game.home_team_name }}
+        </tr>
     {% endfor %}
+    </table>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+    $("#id_nhl_form-starting_country").change(function () {
+        console.log("AKSFN")
+        var url = $("#form").attr("data-cities-url");  // get the url of the load provinces page
+        var country = $(this).val();  // get the selected country
+
+        $.ajax({
+            url: url,
+            data: {
+                'country': country
+            },
+            success: function (data) {   // `data` is the return of the `load_cities` view function
+                // replace the contents of the city input with the data that came from the server
+                $("#id_nhl_form-starting_province").html(data);
+            }
+        });
+
+    });
+    </script>
 {% endblock content %}

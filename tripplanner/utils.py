@@ -163,3 +163,15 @@ def update_all_games():
                                                               date=date)
             if created:
                 new_game.save()
+
+def get_distance_to_game(starting_country, starting_province, starting_city, team_city):
+    API_TOKEN = "AIzaSyD575w7qNL09i9qqaamBxO8qIDCQKYzqdE"
+    URL = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={dest}&key={key}"
+
+    response = requests.get(URL.format(
+        origin="{}, {}, {}".format(starting_country, starting_province, starting_city),
+        dest=team_city,
+        key=API_TOKEN))
+    print(response)
+    print(response.json())
+    return response.json()['rows'][0]['elements'][0]['distance']['text']  # Yikes

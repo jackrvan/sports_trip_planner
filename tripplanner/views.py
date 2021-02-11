@@ -1,4 +1,3 @@
-from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -6,10 +5,9 @@ from django.views.generic.list import ListView
 
 from tripplanner.forms import NHLForm
 from tripplanner.models import NHLGame
-from tripplanner.utils import PROVINCES
+from tripplanner.utils import NHL_TEAMS, PROVINCES, get_distance_to_game
 
 
-# Create your views here.',
 def index(request):
     if request.method == 'POST':
         form = NHLForm(request.POST, prefix="nhl_form")
@@ -32,15 +30,46 @@ class GameListView(ListView):
     model = NHLGame
     template_name = "tripplanner/info_page.html"
     context_object_name = 'games'
+    #paginate_by = 50
 
     def get_queryset(self):
-        return NHLGame.objects.filter((Q(home_team_name=self.kwargs['team']) |
-                                        Q(away_team_name=self.kwargs['team'])) &
-                                        Q(date__range=[self.kwargs['start_date'], self.kwargs['end_date']]))
+        home_team_sort = 'home_team_sort' in self.request.GET
+        away_team_sort = 'away_team_sort' in self.request.GET
+
+        home_team_filter = self.request.GET.get('home_team_filter')
+        away_team_filter = self.request.GET.get('away_team_filter')
+        date_filter = self.request.GET.get('date_filter')
+
+        games_to_show = NHLGame.objects.all()
+
+        if home_team_filter:
+            games_to_show = games_to_show.filter(home_team_name__icontains=home_team_filter)
+        if away_team_filter:
+            games_to_show = games_to_show.filter(away_team_name__icontains=away_team_filter)
+        if date_filter:
+            games_to_show = games_to_show.filter(date__icontains=date_filter)
+
+        if home_team_sort:
+            return games_to_show.order_by('home_team_name')
+        elif away_team_sort:
+            return games_to_show.order_by('away_team_name')
+        else:
+            return games_to_show.order_by('date')
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['team'] = self.kwargs['team']
-        context['start_date'] = self.kwargs['start_date']
-        context['end_date'] = self.kwargs['end_date']
+        context['home_team_filter_initial'] = self.request.GET.get('home_team_filter', '')
+        context['away_team_filter_initial'] = self.request.GET.get('away_team_filter', '')
+        context['date_filter_initial'] = self.request.GET.get('date_filter', '')
+        if self.request.GET.get('nhl_form-starting_city', None):
+            context['distances'] = {
+                team: get_distance_to_game(self.request.GET.get('nhl_form-starting_country', ''),
+                                        self.request.GET.get('nhl_form-starting_province', ''),
+                                        self.request.GET.get('nhl_form-starting_city', ''),
+                                        team) for team in NHL_TEAMS
+            }
+        else:
+            context['distances'] = {
+                team: 99999999 for team in NHL_TEAMS
+            }
         return context
