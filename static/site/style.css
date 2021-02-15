@@ -114,6 +114,16 @@ td, th {
   padding: 8px;
 }
 
+th {
+  cursor: pointer;
+}
+
 tr:nth-child(even) {
   background-color: #dddddd;
+}
+
+#filter-submit {    
+  visibility: hidden;
+  padding: 0px 0px;
+  font-size: 0px;
 }

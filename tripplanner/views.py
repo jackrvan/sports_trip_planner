@@ -1,3 +1,5 @@
+from typing import ClassVar, Optional
+
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -31,11 +33,10 @@ class GameListView(ListView):
     template_name = "tripplanner/info_page.html"
     context_object_name = 'games'
     #paginate_by = 50
+    _cached_distances: ClassVar[Optional[dict]] = {}
+
 
     def get_queryset(self):
-        home_team_sort = 'home_team_sort' in self.request.GET
-        away_team_sort = 'away_team_sort' in self.request.GET
-
         home_team_filter = self.request.GET.get('home_team_filter')
         away_team_filter = self.request.GET.get('away_team_filter')
         date_filter = self.request.GET.get('date_filter')
@@ -48,28 +49,33 @@ class GameListView(ListView):
             games_to_show = games_to_show.filter(away_team_name__icontains=away_team_filter)
         if date_filter:
             games_to_show = games_to_show.filter(date__icontains=date_filter)
-
-        if home_team_sort:
-            return games_to_show.order_by('home_team_name')
-        elif away_team_sort:
-            return games_to_show.order_by('away_team_name')
-        else:
-            return games_to_show.order_by('date')
+        return games_to_show
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['home_team_filter_initial'] = self.request.GET.get('home_team_filter', '')
         context['away_team_filter_initial'] = self.request.GET.get('away_team_filter', '')
         context['date_filter_initial'] = self.request.GET.get('date_filter', '')
-        if self.request.GET.get('nhl_form-starting_city', None):
-            context['distances'] = {
-                team: get_distance_to_game(self.request.GET.get('nhl_form-starting_country', ''),
-                                        self.request.GET.get('nhl_form-starting_province', ''),
-                                        self.request.GET.get('nhl_form-starting_city', ''),
-                                        team) for team in NHL_TEAMS
-            }
+        context['starting_country_initial'] = self.request.GET.get('nhl_form-starting_country', 'Canada')
+        context['starting_province_initial'] = self.request.GET.get('nhl_form-starting_province', '')
+        context['starting_city_initial'] = self.request.GET.get('nhl_form-starting_city', '')
+        city = self.request.GET.get('nhl_form-starting_city', None)
+        context['provinces'] = {
+            province: False for province in PROVINCES[context['starting_country_initial']]
+        }
+        context['provinces'][context['starting_province_initial']] = True
+        if city:
+            print("CACHE = {}".format(GameListView._cached_distances))
+            if city not in GameListView._cached_distances:
+                GameListView._cached_distances[city] = {
+                    team: get_distance_to_game(self.request.GET.get('nhl_form-starting_country', ''),
+                                               self.request.GET.get('nhl_form-starting_province', ''),
+                                               city,
+                                               team) for team in NHL_TEAMS
+                }
+            context['distances'] = GameListView._cached_distances[city]
         else:
             context['distances'] = {
-                team: 99999999 for team in NHL_TEAMS
+                team: "Unknown" for team in NHL_TEAMS
             }
         return context
