@@ -127,3 +127,7 @@ tr:nth-child(even) {
   padding: 0px 0px;
   font-size: 0px;
 }
+
+#date-filter {
+  width: 40%;
+}

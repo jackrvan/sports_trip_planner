@@ -1,20 +1,25 @@
 from django.db import models
+from django.utils import timezone
 
-# Create your models here.
-class NFLTicket(models.Model):
-    price = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
-    home_team = models.CharField(max_length=50)
-    away_team = models.CharField(max_length=50)
-    date = models.DateTimeField()
-    section = models.CharField(max_length=5)  # What are the chances a section is > 5 chars
-    seat = models.CharField(max_length=3)
+
+class NHLTeam(models.Model):
+    team_name = models.CharField(max_length=50)
+    team_id = models.IntegerField()  # The NHL API gives each team an id. Probably useful to save it.
+    city = models.CharField(max_length=50)
+
+    def __str__(self):
+        return '{}'.format(self.team_name)
+
 
 class NHLGame(models.Model):
-    home_team_name = models.CharField(max_length=50)
-    home_team_id = models.IntegerField()
-    away_team_name = models.CharField(max_length=50)
-    away_team_id = models.IntegerField()
+    home_team = models.ForeignKey(NHLTeam, on_delete=models.CASCADE, related_name="home_team")
+    away_team = models.ForeignKey(NHLTeam, on_delete=models.CASCADE, related_name="away_team")
     date = models.DateField()
 
     def __str__(self):
-        return "{}: {} @ {}".format(self.date, self.away_team_name, self.home_team_name)
+        return "{}: {} @ {}".format(self.date, self.away_team, self.home_team)
+
+    def is_in_future(self):
+        """Returns True if the game is in the future and hasnt already been played
+        """
+        return self.date >= timezone.now()

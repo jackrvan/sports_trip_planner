@@ -1,6 +1,6 @@
 import requests
 
-from tripplanner.models import NHLGame
+from tripplanner.models import NHLGame, NHLTeam
 
 NFL_TEAMS = [
     'Arizona Cardinals',
@@ -35,40 +35,6 @@ NFL_TEAMS = [
     'Tampa Bay Buccaneers',
     'Tennessee Titans',
     'Washington Football Team',
-]
-
-NHL_TEAMS = [
-    'Anaheim Ducks',
-    'Arizona Coyotes',
-    'Boston Bruins',
-    'Buffalo Sabres',
-    'Calgary Flames',
-    'Carolina Hurricanes',
-    'Chicago Blackhawks',
-    'Colorado Avalanche',
-    'Columbus Blue Jackets',
-    'Dallas Stars',
-    'Detroit Red Wings',
-    'Edmonton Oilers',
-    'Florida Panthers',
-    'Los Angeles Kings',
-    'Minnesota Wild',
-    'Montréal Canadiens',
-    'Nashville Predators',
-    'New Jersey Devils',
-    'New York Islanders',
-    'New York Rangers',
-    'Ottawa Senators',
-    'Philadelphia Flyers',
-    'Pittsburgh Penguins',
-    'San Jose Sharks',
-    'St. Louis Blues',
-    'Tampa Bay Lightning',
-    'Toronto Maple Leafs',
-    'Vancouver Canucks',
-    'Vegas Golden Knights',
-    'Washington Capitals',
-    'Winnipeg Jets',
 ]
 
 PROVINCES = {
@@ -141,30 +107,54 @@ PROVINCES = {
     ]
 }
 
+"""
 def get_games(team_name):
     all_teams = requests.get("https://statsapi.web.nhl.com/api/v1/teams").json()
     team_id = next(team['id'] for team in all_teams['teams'] if team['name'] == team_name)
     params = {'teamId': team_id, 'startDate': '2021-02-05', 'endDate': '2021-02-28'}
     schedule = requests.get("https://statsapi.web.nhl.com/api/v1/schedule", params=params).json()
     return schedule['dates']
+"""
+
 
 def update_all_games():
+    """Get entire schedule available from the API and fill our database with the data.
+       Should be an admin task. Nothing user facing should ever interact with this. 
+    """
     params = {'startDate': '2021-02-05', 'endDate': '2021-02-28'}
     schedule = requests.get("https://statsapi.web.nhl.com/api/v1/schedule", params=params).json()
     for games_on_date in schedule['dates']:
         date = games_on_date['date']
         for game in games_on_date['games']:
-            home_team = game['teams']['home']['team']
-            away_team = game['teams']['away']['team']
-            new_game, created = NHLGame.objects.get_or_create(home_team_name=home_team['name'],
-                                                              home_team_id=home_team['id'],
-                                                              away_team_name=away_team['name'],
-                                                              away_team_id=away_team['id'],
-                                                              date=date)
+            home_team, created = NHLTeam.objects.get_or_create(
+                                            team_name=game['teams']['home']['team']['name'],
+                                            team_id=game['teams']['home']['team']['id'])
+            if created:
+                home_team.save()
+            away_team, created = NHLTeam.objects.get_or_create(
+                                            team_name=game['teams']['away']['team']['name'],
+                                            team_id=game['teams']['away']['team']['id'])
+            if created:
+                away_team.save()
+            new_game, created = NHLGame.objects.get_or_create(
+                                            home_team=home_team,
+                                            away_team=away_team,
+                                            date=date)
             if created:
                 new_game.save()
 
 def get_distance_to_game(starting_country, starting_province, starting_city, team_city):
+    """Get distance between 2 cities
+
+    Args:
+        starting_country ([type]): The country you are starting in
+        starting_province ([type]): The province/state you are starting in
+        starting_city ([type]): The city you are starting in
+        team_city ([type]): The city that the team is located in
+
+    Returns:
+        str: Distance of city to other city in format "123 km"
+    """
     API_TOKEN = "AIzaSyD575w7qNL09i9qqaamBxO8qIDCQKYzqdE"
     URL = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={dest}&key={key}"
 

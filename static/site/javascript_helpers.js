@@ -44,6 +44,19 @@ function sortTable(n) {
                         break;
                     }
                 }
+                else if(n == 2) {
+                    // Need to sort on dates
+                    var d1 = new Date(year=x.innerHTML.split("-")[2],
+                                      month=x.innerHTML.split("-")[1],
+                                      day=x.innerHTML.split("-")[0]);
+                    var d2 = new Date(year=y.innerHTML.split("-")[2],
+                                      month=y.innerHTML.split("-")[1],
+                                      day=y.innerHTML.split("-")[0]);
+                    if (d1 > d2) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
                 else {
                     if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
                         // If so, mark as a switch and break the loop:
@@ -56,6 +69,19 @@ function sortTable(n) {
                     // Need to sort using numbers since its the distance column
                     if (parseInt(x.innerHTML.replace(',', '')) < parseInt(y.innerHTML.replace(',', ''))) {
                         // If so, mark as a switch and break the loop:
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+                else if(n == 2) {
+                    // Need to sort on dates
+                    var d1 = new Date(year=x.innerHTML.split("-")[2],
+                                      month=x.innerHTML.split("-")[1],
+                                      day=x.innerHTML.split("-")[0]);
+                    var d2 = new Date(year=y.innerHTML.split("-")[2],
+                                      month=y.innerHTML.split("-")[1],
+                                      day=y.innerHTML.split("-")[0]);
+                    if (d1 < d2) {
                         shouldSwitch = true;
                         break;
                     }
