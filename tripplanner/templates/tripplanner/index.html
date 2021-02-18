@@ -43,32 +43,36 @@
     </div>
     <br>
     
-    <table id="nhl-game-table">
-    <tr>
-        <th onclick="sortTable(0)">Away Team</th>
-        <th onclick="sortTable(1)">Home Team</th>
-        <th onclick="sortTable(2)">Date (Day-Month-Year)</th>
-        <th onclick="sortTable(3)">Distance</th>
-        <input type="submit" value="Submit" id="filter-submit">
-    </tr>
-    <tr>
-        <th><input type="text" id="away_team_filter" name="away_team_filter" value="{{ away_team_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
-        <th><input type="text" id="home_team_filter" name="home_team_filter" value="{{ home_team_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
-        <th>
-            <input type="text" id="date-filter" name="date_filter_begin" value="{{ date_filter_begin_initial }}" placeholder="filter" data-lpignore="true">
-            <input type="text" id="date-filter" name="date_filter_end" value="{{ date_filter_end_initial }}" placeholder="filter" data-lpignore="true">
-        </th>
-        <th><input type="text" id="distance_filter" name="distance_filter" value="{{ distance_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
-    </form>
-    {% for game in games %}
+    {% if games %}
+        <table id="nhl-game-table">
         <tr>
-            <td>{{ game.away_team }}</td>
-            <td>{{ game.home_team }}</td>
-            <td>{{ game.date|date:"d-m-y" }}</td>
-            <td>{{ distances|get_dict_item:game.home_team }}</td>
+            <th onclick="sortTable(0)">Away Team</th>
+            <th onclick="sortTable(1)">Home Team</th>
+            <th onclick="sortTable(2)">Date (Day-Month-Year)</th>
+            <th onclick="sortTable(3)">Distance</th>
+            <input type="submit" value="Submit" id="filter-submit">
         </tr>
-    {% endfor %}
-    </table>
+        <tr>
+            <th><input type="text" id="away_team_filter" name="away_team_filter" value="{{ away_team_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+            <th><input type="text" id="home_team_filter" name="home_team_filter" value="{{ home_team_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+            <th>
+                <input type="text" id="date-filter" name="date_filter_begin" value="{{ date_filter_begin_initial }}" placeholder="filter" data-lpignore="true">
+                <input type="text" id="date-filter" name="date_filter_end" value="{{ date_filter_end_initial }}" placeholder="filter" data-lpignore="true">
+            </th>
+            <th><input type="text" id="distance_filter" name="distance_filter" value="{{ distance_filter_initial }}" placeholder="filter" data-lpignore="true"></th>
+        </form>
+        {% for game in games %}
+            <tr>
+                <td>{{ game.away_team }}</td>
+                <td>{{ game.home_team }}</td>
+                <td>{{ game.date|date:"d-m-y" }}</td>
+                <td>{{ distances|get_dict_item:game.home_team }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% else %}
+        <p>No games were found</p>
+    {% endif %}
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src={% static 'site/javascript_helpers.js' %}></script>
 {% endblock content %}
