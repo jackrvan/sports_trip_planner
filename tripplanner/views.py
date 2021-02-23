@@ -1,11 +1,14 @@
 from typing import ClassVar, Optional
 
 from django.shortcuts import render
-from django.views.generic.list import ListView
 
+from django_filters.views import FilterView
+from django_tables2.views import SingleTableMixin
+from tripplanner.filters import NHLGameFilter
 from tripplanner.models import NHLGame, NHLTeam
+from tripplanner.tables import NHLGameTable
 from tripplanner.utils import PROVINCES, get_distance_to_game
-
+from django_tables2 import RequestConfig 
 
 def load_provinces(request):
     """When the user changes the country we want to change the province dropdown
@@ -20,14 +23,43 @@ def load_provinces(request):
     provinces = PROVINCES[country]
     return render(request, 'tripplanner/province_dropdown_list_options.html', {'provinces': provinces})
 
-class GameListView(ListView):
+class GameListView(SingleTableMixin, FilterView):
     model = NHLGame
     template_name = "tripplanner/index.html"
     context_object_name = 'games'
-    #paginate_by = 50
+    paginate_by = 25
+    table_class = NHLGameTable
     _cached_distances: ClassVar[Optional[dict]] = {}
+    filterset_class = NHLGameFilter
 
+    def get_table(self, **kwargs):
+        table_class = self.get_table_class()
+        table = table_class(data=self.get_table_data(), request=self.request, **kwargs)
+        return RequestConfig(
+            self.request, paginate=self.get_table_pagination(table)
+        ).configure(table)
 
+    """
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        country = self.request.GET.get('country', '')
+        province = self.request.GET.get('province', '')
+        city = self.request.GET.get('city', '')
+        if city:
+            print("CACHE = {}".format(GameListView._cached_distances))
+            if city not in GameListView._cached_distances:
+                GameListView._cached_distances[city] = {
+                    team: get_distance_to_game(country, province, city,
+                                               team) for team in [x.team_name for x in NHLTeam.objects.all()]
+                }
+            context['distances'] = GameListView._cached_distances[city]
+        else:
+            context['distances'] = {
+                team: "Unknown" for team in [x.team_name for x in NHLTeam.objects.all()]
+            }
+        return context
+
+    
     def get_queryset(self):
         home_team_filter = self.request.GET.get('home_team_filter')
         away_team_filter = self.request.GET.get('away_team_filter')
@@ -80,3 +112,4 @@ class GameListView(ListView):
                 team: "Unknown" for team in [x.team_name for x in NHLTeam.objects.all()]
             }
         return context
+"""
