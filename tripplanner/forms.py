@@ -1,3 +1,4 @@
+"""
 from django import forms
 
 from crispy_forms.bootstrap import FormActions
@@ -23,3 +24,5 @@ class NHLForm(forms.Form):
     helper.label_class = 'col-4'
     helper.field_class = 'col-8'
     helper.form_tag = False
+
+"""
