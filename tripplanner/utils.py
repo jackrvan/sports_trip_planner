@@ -1,42 +1,11 @@
+import sys
+import os
 import requests
 
-from tripplanner.models import NHLGame, NHLTeam
-
-NFL_TEAMS = [
-    'Arizona Cardinals',
-    'Atlanta Falcons',
-    'Baltimore Ravens',
-    'Buffalo Bills',
-    'Carolina Panthers',
-    'Chicago Bears',
-    'Cincinnati Bengals',
-    'Cleveland Browns',
-    'Dallas Cowboys',
-    'Denver Broncos',
-    'Detroit Lions',
-    'Green Bay Packers',
-    'Houston Texans',
-    'Indianapolis Colts',
-    'Jacksonville Jaguars',
-    'Kansas City Chiefs',
-    'Las Vegas Raiders',
-    'Los Angeles Chargers',
-    'Los Angeles Rams',
-    'Miami Dolphins',
-    'Minnesota Vikings',
-    'New England Patriots',
-    'New Orleans Saints',
-    'New York Giants',
-    'New York Jets',
-    'Philadelphia Eagles',
-    'Pittsburgh Steelers',
-    'San Francisco 49ers',
-    'Seattle Seahawks',
-    'Tampa Bay Buccaneers',
-    'Tennessee Titans',
-    'Washington Football Team',
-]
-
+COUNTRY_CHOICES = {
+    ("CA", "Canada"),
+    ("US", "USA"),
+}
 PROVINCES = {
     "Canada": [
         "Alberta",
@@ -119,8 +88,9 @@ def get_games(team_name):
 
 def update_all_games():
     """Get entire schedule available from the API and fill our database with the data.
-       Should be an admin task. Nothing user facing should ever interact with this. 
+       Should be an admin task. Nothing user facing should ever interact with this.
     """
+    from tripplanner.models import NHLGame, NHLTeam
     params = {'startDate': '2021-02-05', 'endDate': '2021-02-28'}
     schedule = requests.get("https://statsapi.web.nhl.com/api/v1/schedule", params=params).json()
     for games_on_date in schedule['dates']:
@@ -155,8 +125,11 @@ def get_distance_to_game(starting_country, starting_province, starting_city, tea
     Returns:
         str: Distance of city to other city in format "123 km"
     """
-    API_TOKEN = "AIzaSyD575w7qNL09i9qqaamBxO8qIDCQKYzqdE"
-    URL = "https://maps.googleapis.com/maps/api/distancematrix/json?origins={origin}&destinations={dest}&key={key}"
+    API_TOKEN = os.environ.get('MAPS_API_TOKEN')
+    if not API_TOKEN:
+        sys.exit("Did you forget to set MAPS_API_TOKEN?")
+    URL = "https://maps.googleapis.com/maps/api/distancematrix/json?" \
+            "origins={origin}&destinations={dest}&key={key}"
 
     response = requests.get(URL.format(
         origin="{}, {}, {}".format(starting_country, starting_province, starting_city),

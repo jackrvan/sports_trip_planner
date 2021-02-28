@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_tables2',
     'bootstrap4',
+    'django_filters',
     # CUSTOM APPS
     'tripplanner.apps.TripplannerConfig',
 ]

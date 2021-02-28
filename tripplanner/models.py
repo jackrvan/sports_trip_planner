@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from tripplanner.utils import COUNTRY_CHOICES
+
 
 class NHLTeam(models.Model):
     team_name = models.CharField(max_length=50)
@@ -23,3 +25,14 @@ class NHLGame(models.Model):
         """Returns True if the game is in the future and hasnt already been played
         """
         return self.date >= timezone.now()
+
+class Distance(models.Model):
+    destination = models.ForeignKey(NHLTeam, on_delete=models.CASCADE)
+    starting_country = models.CharField(max_length=2,
+                                        choices=COUNTRY_CHOICES)
+    starting_province = models.CharField(max_length=50)
+    starting_city = models.CharField(max_length=50)
+    distance = models.IntegerField()
+
+    def __str__(self):
+        return 'Travelling from {} to {}'.format(self.starting_city, self.destination)
