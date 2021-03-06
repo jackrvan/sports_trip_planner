@@ -8,6 +8,9 @@
     {% if filter %}
         <form action="" method="get" class="form form-inline">
             {% bootstrap_form filter.form layout='inline' %}
+            <input type="hidden" name="country" id="id_country" value="{{ country }}">
+            <input type="hidden" name="province" id="id_province" value="{{ province }}">
+            <input type="hidden" name="city" id="id_city" value="{{ city }}">
             {% bootstrap_button 'filter' %}
         </form>
     {% endif %}

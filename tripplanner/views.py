@@ -35,3 +35,10 @@ class GameListView(SingleTableMixin, FilterView):
         return RequestConfig(
             self.request, paginate=self.get_table_pagination(table)
         ).configure(table)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['country'] = self.request.GET.get('country', 'Canada')
+        context['province'] = self.request.GET.get('province', 'Canada')
+        context['city'] = self.request.GET.get('city', 'Canada')
+        return context

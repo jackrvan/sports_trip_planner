@@ -9,5 +9,4 @@ class NHLGameFilter(django_filters.FilterSet):
         fields = {
             'home_team__team_name': ['icontains'],
             'away_team__team_name': ['icontains'],
-            'date': [],
         }

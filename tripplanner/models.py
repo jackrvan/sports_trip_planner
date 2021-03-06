@@ -32,7 +32,7 @@ class Distance(models.Model):
                                         choices=COUNTRY_CHOICES)
     starting_province = models.CharField(max_length=50)
     starting_city = models.CharField(max_length=50)
-    distance = models.IntegerField()
+    distance = models.DecimalField(decimal_places=1, max_digits=6)
 
     def __str__(self):
         return 'Travelling from {} to {}'.format(self.starting_city, self.destination)

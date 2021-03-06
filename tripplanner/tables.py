@@ -1,3 +1,4 @@
+from django.db.models import Min, Q
 import django_tables2 as tables
 from tripplanner.models import Distance, NHLGame, NHLTeam
 from tripplanner.utils import get_distance_to_game
@@ -58,7 +59,6 @@ class NHLGameTable(tables.Table):
                 "Howd you end up with more than one distance from {} to {}".format(team_object[0],
                                                                                    city)
             if not distance_object:
-                print("Making new entry for {} to {}".format(city, team_object[0]))
                 # Get distance to game and strip ending " km" and delete commas
                 distance = get_distance_to_game(starting_country=country,
                                                 starting_province=province,
@@ -72,18 +72,43 @@ class NHLGameTable(tables.Table):
                                            distance=distance)
                 distance_object.save()
             else:
-                print("using cache for {} to {}".format(city, team_object[0]))
                 distance = distance_object.values()[0]['distance']
 
-            print("Distance object = {}".format(distance_object))
             return distance
         return "Unknown"
 
     def order_distance(self, queryset, is_descending):
         """Order by our custom distance column
         """
-        all_teams = [x.home_team.team_name for x in queryset]
-        for team in all_teams:
-            pass
-        print("All teams = {}".format(all_teams))
-        return (queryset, True)
+        country = self.request.GET.get('country', '')
+        province = self.request.GET.get('province', '')
+        city = self.request.GET.get('city', '')
+        for team in NHLTeam.objects.all():
+            # We need to loop through and make sure we have all the distances in the db first
+            distance_object = Distance.objects.filter(starting_country=country,
+                                                      starting_province=province,
+                                                      starting_city=city,
+                                                      destination=team)
+            if distance_object:
+                assert len(distance_object) == 1, \
+                    f"Howd you get more than one distance between {city} and {team}"
+            else:
+                distance = get_distance_to_game(starting_country=country,
+                                                starting_province=province,
+                                                starting_city=city,
+                                                team_city=team.city)[:-3].replace(',', '')
+                distance_object = Distance(starting_country=country,
+                                           starting_province=province,
+                                           starting_city=city,
+                                           destination=team,
+                                           distance=distance)
+                distance_object.save()
+        my_filter = Min('home_team__distance__distance',
+                        filter=(Q(home_team__distance__starting_country=country) &
+                                Q(home_team__distance__starting_province=province) &
+                                Q(home_team__distance__starting_city=city)))
+        print("with filter = {}".format(queryset.aggregate(thing=my_filter)))
+        sorted_queryset = queryset.annotate(distances=my_filter).order_by(
+            "distances" if not is_descending else "-distances")
+        print(f"sorted= {sorted_queryset}")
+        return (sorted_queryset, True)
